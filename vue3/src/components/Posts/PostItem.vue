@@ -9,7 +9,7 @@
     </div>
     <div class="flex items-center justify-between text-sm text-gray-500">
       <span>Автор: {{ post.author }}</span>
-      <span>{{ post.date }}</span>
+      <span>{{ post.created_at }}</span>
     </div>
     <button class="absolute top-[12px] right-[12px] text-gray-400 hover:text-red-500 transition-colors group cursor-pointer" @click="deletePost(post)">
       <svg class="w-5 h-5 group-hover:rotate-90 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -28,7 +28,15 @@
           author: String,
           title: String,
           content: String,
-          date: String
+          created_at: String,
+          page: String,
+          per_page: String,
+          search: String,
+          status: String,
+          sort: String,
+          order: String,
+          start_date: String,
+          end_date: String,
         },
         required: true
       }

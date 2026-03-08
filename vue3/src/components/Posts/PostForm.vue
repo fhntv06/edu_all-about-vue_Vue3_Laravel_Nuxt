@@ -69,9 +69,6 @@
     },
     methods: {
       createPost() {
-        const id = Date.now().toString()
-        const postDate = new Date()
-
         fetch(this.url, {
           method: 'POST',
           headers: {
@@ -79,17 +76,15 @@
           },
           body: JSON.stringify({
             ...this.post,
-            id,
-            date: `${postDate.getDate()}.${postDate.getMonth() + 1}.${postDate.getFullYear()}`
           })
         })
           .then((response) => {
             if (response.ok) {
-              console.warn(`Post with id="${id}" created!`)
+              console.warn('Post with created!')
               this.clearPost()
               this.router.push('/dashboard/posts')
             } else {
-              throw new Error(`Error request by create post with id="${id}"`)
+              throw new Error('Error request by create post with')
             }
           })
           .catch((error) => console.error(error))

@@ -106,10 +106,10 @@ export default {
       const url = new URL(this.url);
 
       if (this.page) {
-        url.searchParams.append('_page', this.page);
+        url.searchParams.append('page', this.page);
       }
       if (this.perPage) {
-        url.searchParams.append('_per_page', this.perPage);
+        url.searchParams.append('per_page', this.perPage);
       }
       setTimeout(() => {
         fetch(url)
@@ -117,11 +117,11 @@ export default {
             if (response.ok) return response.json()
             else throw new Error(`Status updatePosts is ${response.status}`)
           })
-          .then(({data, pages, items, next,last}) => {
+          .then(({ data, meta }) => {
             this.posts = data
-            this.pages = pages
-            this.items = items
-            this.page = next !== null ? next - 1 : last
+            this.pages = meta.last_page
+            this.items = meta.total
+            this.page = meta.current_page
           })
           .catch((error) => console.error('Error get posts ', error))
           .finally(() => {
