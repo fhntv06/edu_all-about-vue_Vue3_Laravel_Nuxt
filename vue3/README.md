@@ -4,8 +4,8 @@
 
 create file .env.local:
 variables for app:
-- VUE_APP_WEATHER_API_KEY=your_api_key_from_openweather
-- VUE_APP_URL_API=your_api_url
+- VITE_APP_WEATHER_API_KEY=your_api_key_from_openweather
+- VITE_APP_URL_API=your_api_url
 
 used in app: console.log(process.env.VUE_APP_WEATHER_API_KEY)
 
@@ -84,3 +84,15 @@ npm run server
 - WeatherWidget - Виджет погоды в разных городах мира
 - WorldTimeWidget - Виджет времени в разных городах мира
 - UserTimeWidget - Виджет времени пользователя
+
+### Что нужно сделать
+1) Переписать авторизацию, регистрацию под Laravel
+   2) /login
+   3) /registration
+   4) /forgot-password
+2) Переписать получение данных по API с json-server под Laravel
+   3) Отображение списка постов
+   4) Создание поста
+   5) Удаление поста
+   6) Обновление поста
+
