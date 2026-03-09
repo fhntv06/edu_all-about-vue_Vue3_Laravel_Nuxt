@@ -22,17 +22,17 @@ services:
       retries: 10
 
   # PHP-FPM для Laravel
-  php:
+  backend:
     build:
       context: ./backend  # предполагается, что backend код в папке backend
       dockerfile: Dockerfile
-      target: development  # используем development стадию
+      target: production  # используем production стадию
     container_name: backend_laravel_app
     restart: unless-stopped
-    working_dir: /var/www/html
+    working_dir: /var/www/html/backend
     volumes:
-      - ./backend:/var/www/html  # монтируем код backend
-      - ./storage/logs:/var/www/html/storage/logs
+      - ./backend:/var/www/html/backend
+      - ./storage/logs:/var/www/html/backend/storage/logs
     environment:
       - DB_CONNECTION=mysql
       - DB_HOST=mysql
@@ -52,55 +52,55 @@ services:
     container_name: nginx_laravel_app
     restart: unless-stopped
     ports:
-      - "8000:80"
+      - "80:80"
     volumes:
-      - ./backend:/var/www/html
-      - ./docker/nginx/conf.d:/etc/nginx/conf.d  # конфиг nginx нужно создать отдельно
+      # Монтируем backend для API
+      - ./backend:/var/www/html/backend
+      # Монтируем собранный фронтенд
+      - ./frontend/dist:/var/www/html/frontend/dist
+      # Конфигурация Nginx
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
     networks:
       - app-network
     depends_on:
-      - php
+      - backend
+      - frontend
 
   # Node.js для frontend (Vue 3 + Vite)
   frontend:
     build:
       context: ./frontend  # предполагается, что frontend код в папке frontend
       dockerfile: Dockerfile
-      target: development
-    container_name: frontend_laravel_app
-    restart: unless-stopped
-    ports:
-      - "5173:5173"  # Vite dev server
-      - "8888:8888"  # JSON Server (если нужен)
+      target: production
+    container_name: frontend_builder_app
+    restart: "no"
+    working_dir: /var/www/html/frontend
     volumes:
-      - ./frontend:/app
-      - /app/node_modules  # анонимный volume для node_modules
+      - ./frontend:/var/www/html/frontend
+      - ./frontend/dist:/var/www/html/frontend/dist
     environment:
       - VITE_APP_WEATHER_API_KEY=215d9235c8b6f9a95c4f1260666de0c9
       - VITE_APP_TITLE=My App
-      - VITE_APP_URL_API=http://nginx:80/api/posts  # используем внутреннее имя сервиса
-      - CHOKIDAR_USEPOLLING=true  # для hot-reload в Docker
+      - VITE_APP_URL_API=/api
     networks:
       - app-network
-    depends_on:
-      - nginx
 
   # Queue worker для Laravel (опционально)
   queue:
     build:
       context: ./backend
       dockerfile: Dockerfile
-      target: development
+      target: production
     container_name: queue_laravel_app
     restart: unless-stopped
-    working_dir: /var/www/html
+    working_dir: /var/www/html/backend
     volumes:
-      - ./backend:/var/www/html
+      - ./backend:/var/www/html/backend
     command: php artisan queue:work --tries=3
     networks:
       - app-network
     depends_on:
-      - php
+      - backend
       - mysql
 
 volumes:
