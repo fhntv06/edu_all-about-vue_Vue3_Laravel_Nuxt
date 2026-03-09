@@ -19,8 +19,8 @@ npm run build
 composer install
 ```
 
-### Education:
-#### Commands:
+## Education:
+### Commands:
 ```php
 php artisan make:migration create_posts_table - создание миграции posts
 ```
@@ -40,7 +40,7 @@ php artisan migrate:fresh - перезапуск миграций, откат м
 php artisan migrate:fresh --seed - перезапуск с сидерами
 ```
 
-#### Materials
+### Materials
 В версии 12 Laravel удобно создавать [контроллеры ресурсов](https://laravel.com/docs/12.x/controllers#resource-controllers).  
 
 Генерируется контроллер с помощью команды:
@@ -55,3 +55,7 @@ php artisan make:controller ExampleController --resource
 ```php
 php artisan route:list
 ```
+
+#### Авторизация
+Реализована с помощью Laravel Sanctum, на основе токенов.  
+Для SPA реализованы сервисы аутентификации на основе cookie.  При анализе входящего HTTP-запроса Sanctum сначала проверяет наличие cookie-файла аутентификации, и если его нет, то проверяет заголовок Authorizationна наличие действительного токена API.
