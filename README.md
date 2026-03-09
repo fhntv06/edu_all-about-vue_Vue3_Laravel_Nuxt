@@ -18,10 +18,6 @@ npm run build
 ```
 composer install
 ```
-```php
-php artisan migrate
-php artisan migrate --seed
-```
 
 ### Education:
 #### Commands:
@@ -52,7 +48,7 @@ php artisan migrate:fresh --seed - перезапуск с сидерами
 php artisan make:controller ExampleController --resource
 ```
 
-С помощью команды генерируется констроллер в app/Http/Controllers/, где будут все необходимые методы для всех маршрутов.
+С помощью команды генерируется контроллер в app/Http/Controllers/, где будут все необходимые методы для всех маршрутов.
 То есть прописывать множество маршрутов самостоятельно не нужно.
 
 Все маршрут можно посмотреть по команде:
