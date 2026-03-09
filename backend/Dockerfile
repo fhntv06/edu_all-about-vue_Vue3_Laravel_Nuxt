@@ -1,7 +1,7 @@
 # Используем многоступенчатую сборку эффективнее
 FROM php:8.4-fpm AS base
 
-WORKDIR /var/www/html
+WORKDIR /var/www/html/backend
 
 # Установка системных зависимостей и PHP расширений
 RUN apt-get update && apt-get install -y \
@@ -29,23 +29,35 @@ RUN composer install \
     --no-scripts \
     --ignore-platform-reqs
 
-# Финальный этап разработки
-FROM base AS development
-COPY --from=vendor /var/www/html/vendor /var/www/html/vendor
+# Production этап
+FROM base AS production
+COPY --from=vendor /var/www/html/backend/vendor /var/www/html/backend/vendor
 COPY . .
 
+# Создаем директории и устанавливаем права
+RUN mkdir -p /var/www/html/backend/storage/framework/sessions \
+    && mkdir -p /var/www/html/backend/storage/framework/views \
+    && mkdir -p /var/www/html/backend/storage/framework/cache \
+    && mkdir -p /var/www/html/backend/storage/logs \
+    && mkdir -p /var/www/html/backend/bootstrap/cache
+
 # Права на storage и bootstrap/cache
-RUN chown -R www-data:www-data /var/www/html/storage \
-    && chown -R www-data:www-data /var/www/html/bootstrap/cache \
-    && chmod -R 775 /var/www/html/storage \
-    && chmod -R 775 /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/html/backend/storage \
+    && chown -R www-data:www-data /var/www/html/backend/bootstrap/cache \
+    && chmod -R 775 /var/www/html/backend/storage \
+    && chmod -R 775 /var/www/html/backend/bootstrap/cache
+
+# Оптимизация для production
+RUN composer dump-autoload --optimize \
+    && php artisan optimize \
+    && php artisan config:cache \
+    && php artisan route:cache \
+    && php artisan view:cache
+
+RUN composer install --optimize-autoloader --no-dev \
+    && php artisan optimize
 
 USER www-data
 
 EXPOSE 9000
 CMD ["php-fpm"]
-
-# Production этап (можно добавить оптимизации)
-FROM development AS production
-RUN composer install --optimize-autoloader --no-dev \
-    && php artisan optimize
