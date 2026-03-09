@@ -1,9 +1,9 @@
-## Проект состоит из Front-End и Back-End.
+# Проект состоит из Front-End и Back-End.
 
-#### Front-End выполнен на Vue3.  
-#### Back-End выполнен на Laravel.
+### Front-End выполнен на Vue3.  
+### Back-End выполнен на Laravel.
 
-## Запуск приложения:
+# Запуск приложения:
 Убедиться в том, что у Вас в .env все переменные корректны, например, что DB_CONNECTION выставлена со значением для Вашей базы данных.
 
 В директории frontend выполнить команды:
@@ -19,8 +19,8 @@ npm run build
 composer install
 ```
 
-## Education:
-### Commands:
+# Education:
+## Commands:
 ```php
 php artisan make:migration create_posts_table - создание миграции posts
 ```
@@ -40,7 +40,8 @@ php artisan migrate:fresh - перезапуск миграций, откат м
 php artisan migrate:fresh --seed - перезапуск с сидерами
 ```
 
-### Materials
+## Materials
+### Controllers
 В версии 12 Laravel удобно создавать [контроллеры ресурсов](https://laravel.com/docs/12.x/controllers#resource-controllers).  
 
 Генерируется контроллер с помощью команды:
@@ -53,9 +54,18 @@ php artisan make:controller ExampleController --resource
 
 Все маршрут можно посмотреть по команде:
 ```php
-php artisan route:list
+php artisan rou te:list
 ```
+### Requests
+Создание Requests: php artisan make:request Api/Auth/AutLoginRequest
+- validated - метод для получения валидированных данных из запроса.
 
-#### Авторизация
+#### FormRequest
+FormRequest — это пользовательские классы запросов, которые инкапсулируют собственную логику проверки и авторизации.  
+Каждый запрос формы, сгенерированный Laravel, имеет два метода: authorize и rules.
+- authorize - определяет, авторизован ли пользователь для выполнения этого запроса. Обычно возвращает true, если нет особых требований к авторизации.
+- rules - возвращает массив правил, которые должны применяться к данным запроса.
+
+### Авторизация
 Реализована с помощью Laravel Sanctum, на основе токенов.  
 Для SPA реализованы сервисы аутентификации на основе cookie.  При анализе входящего HTTP-запроса Sanctum сначала проверяет наличие cookie-файла аутентификации, и если его нет, то проверяет заголовок Authorizationна наличие действительного токена API.
