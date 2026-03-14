@@ -4,8 +4,14 @@
 
 create file .env.local:
 variables for app:
-- VITE_APP_WEATHER_API_KEY=your_api_key_from_openweather
-- VITE_APP_URL_API=your_api_url
+
+```
+VITE_APP_WEATHER_API_URL=your_api_url_to_openweather or https://api.openweathermap.org/data/2.5/weather
+VITE_APP_WEATHER_API_KEY=your_api_key_from_openweather
+VITE_APP_API_PROTOCOL=your_api_protocol(default value http)
+VITE_APP_API_HOST=your_api_host(default value localhost)
+VITE_APP_API_PORT=your_api_por(default value 8000)
+```
 
 used in app: console.log(process.env.VUE_APP_WEATHER_API_KEY)
 
