@@ -59,5 +59,5 @@ RUN composer install --optimize-autoloader --no-dev \
 
 USER www-data
 
-EXPOSE 9000
+EXPOSE 8000
 CMD ["php-fpm"]

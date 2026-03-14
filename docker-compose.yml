@@ -29,6 +29,8 @@ services:
       target: production  # используем production стадию
     container_name: backend_laravel_app
     restart: unless-stopped
+    ports:
+      - "8000:8000"
     working_dir: /var/www/html/backend
     volumes:
       - ./backend:/var/www/html/backend
