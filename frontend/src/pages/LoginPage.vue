@@ -18,19 +18,22 @@
 
       <!-- Форма -->
       <form class="mt-8 space-y-6" @submit.prevent="handleLogin">
-        <div class="rounded-md shadow-sm -space-y-px">
-          <!-- Поле email/телефон -->
+          <!-- Поле email -->
           <div>
-            <label for="login" class="sr-only">Email или телефон</label>
+            <label for="login" class="sr-only">Email</label>
             <input
               id="login"
-              v-model="form.login"
-              name="login"
+              v-model="form.email"
+              name="email"
               type="text"
               required
-              class="relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm transition-colors"
-              placeholder="Email или телефон"
+              class="relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm transition-colors"
+              placeholder="Email"
+              @blur="validateField('email')"
             >
+            <p v-if="!validation.email.valid" class="mt-1 text-sm text-red-600">
+              {{ validation.email.message }}
+            </p>
           </div>
 
           <!-- Поле пароля -->
@@ -42,11 +45,14 @@
               name="password"
               type="password"
               required
-              class="relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm transition-colors"
+              class="relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm transition-colors"
               placeholder="Пароль"
+              @blur="validateField('password')"
             >
+            <p v-if="!validation.password.valid" class="mt-1 text-sm text-red-600">
+              {{ validation.password.message }}
+            </p>
           </div>
-        </div>
 
         <!-- Дополнительные опции -->
         <div class="flex items-center justify-between">
@@ -57,6 +63,7 @@
               name="remember-me"
               type="checkbox"
               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              @change="validateField('rememberMe')"
             >
             <label for="remember-me" class="ml-2 block text-sm text-gray-900">
               Запомнить меня
@@ -94,7 +101,7 @@
         </div>
 
         <!-- Сообщения об ошибках -->
-        <div v-if="error" class="rounded-md bg-red-50 p-4">
+        <div v-if="errors.length" class="rounded-md bg-red-50 p-4">
           <div class="flex">
             <div class="flex-shrink-0">
               <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
@@ -105,7 +112,7 @@
               <h3 class="text-sm font-medium text-red-800">
                 Ошибка авторизации
               </h3>
-              <div class="mt-2 text-sm text-red-700">
+              <div class="mt-2 text-sm text-red-700" v-for="error in errors">
                 <p>{{ error }}</p>
               </div>
             </div>
@@ -126,90 +133,115 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'LoginPage',
-  data() {
-    return {
-      form: {
-        login: '',
-        password: '',
-        rememberMe: false
-      },
-      isLoading: false,
-      error: ''
-    }
-  },
-  computed: {
-    isAuthenticated() {
-      return this.$store.getters.isAuthenticated
-    }
-  },
-  mounted() {
-    // Если пользователь уже авторизован, перенаправляем на главную
-    if (this.isAuthenticated) {
-      this.$router.push('/dashboard')
-    }
-  },
-  methods: {
-    async handleLogin() {
-      // Сброс ошибки
-      this.error = ''
+<script setup>
+import { reactive, ref, computed, onBeforeMount } from 'vue'
+import { useRouter } from 'vue-router'
+import { useStore } from 'vuex'
+import { fetchLogin } from '@/api'
+import { useFormValidation } from '@/composables'
 
-      // Валидация
-      if (!this.form.login.trim() || !this.form.password) {
-        this.error = 'Пожалуйста, заполните все поля'
-        return
-      }
+const router = useRouter()
+const store = useStore()
 
-      this.isLoading = true
+const isLoading = ref(false)
+const errors = ref([])
 
-      try {
-        const response = await this.performLogin()
+const form = reactive({
+  email: '',
+  password: '',
+  rememberMe: false
+})
 
-        // Сохраняем данные авторизации в store
-        this.$store.dispatch('login', {
-          user: response.user,
-          token: response.token
-        })
+// Правила валидации
+const validationRules = {
+  email: ['required', 'email'],
+  password: ['required', 'password'],
+  rememberMe: ['bool']
+}
 
-        // Сохраняем данные пользователя в localStorage для инициализации
-        localStorage.setItem('user-data', JSON.stringify(response.user))
+// Метки полей для сообщений об ошибках
+const fieldLabels = {
+  email: 'Email',
+  password: 'Пароль'
+  // rememberMe не нуждается в метке, так как не валидируется
+}
 
-        // Успешная авторизация
-        this.$router.push('/dashboard')
-      } catch (error) {
-        this.error = error.message
-      } finally {
-        this.isLoading = false
-      }
-    },
-    // Имитация запроса к API для авторизации
-    performLogin() {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          // Mock данные для авторизации
-          const validCredentials = [
-            { login: 'admin@example.com', password: 'password', user: { id: 1, name: 'Администратор', email: 'admin@example.com' } },
-            { login: 'user@test.ru', password: 'password', user: { id: 2, name: 'Пользователь', email: 'user@test.ru' } },
-            { login: '+79991234567', password: 'password', user: { id: 3, name: 'Телефонный пользователь', phone: '+79991234567' } }
-          ]
+// Используем хук валидации
+const { validation, validateField, validateAll } = useFormValidation( form, validationRules, fieldLabels)
 
-          const credential = validCredentials.find(
-            cred => cred.login === this.form.login && cred.password === this.form.password
-          )
+// Вычисляемое свойство для проверки авторизации
+const isAuthenticated = computed(() => store.getters.isAuthenticated)
 
-          if (credential) {
-            resolve({
-              user: credential.user,
-              token: 'mock-jwt-token-' + Date.now()
-            })
-          } else {
-            reject(new Error('Неверный email/телефон или пароль'))
-          }
-        }, 1500)
-      })
-    },
+// Перенаправление, если пользователь уже авторизован
+onBeforeMount(() => {
+  if (isAuthenticated.value) {
+    router.push('/dashboard')
   }
+})
+
+// Сохранение данных пользователя
+const saveDataUser = (response) => {
+  // Сохраняем данные авторизации в store
+  store.dispatch('login', {
+    user: response.user,
+    token: response.token
+  })
+
+  // Сохраняем данные пользователя в localStorage для инициализации
+  localStorage.setItem('user-data', JSON.stringify(response.user))
+
+  // Успешная авторизация
+  router.push('/dashboard')
+}
+
+// Выполнение запроса на авторизацию
+const performLogin = async () => {
+  try {
+    console.log(form)
+    const response = await fetchLogin(form)
+    console.log('Login response:', response)
+
+    // Проверяем структуру ответа и вызываем saveDataUser
+    // В зависимости от структуры ответа может быть response.data или просто response
+    const data = response.data || response
+    saveDataUser(data)
+  } catch (error) {
+    console.error('Login error:', error)
+    const responseData = error?.response?.data
+
+    if (responseData?.errors) {
+      Object.entries(responseData.errors).forEach(([nameField, errorMessages]) => {
+        // Обновляем состояние валидации для поля с ошибкой
+        if (validation[nameField]) {
+          validation[nameField].valid = false
+          validation[nameField].message = errorMessages[0]
+        }
+
+        errors.value.push(errorMessages[0])
+      })
+    } else if (responseData?.message) {
+      errors.value.push(responseData.message)
+    } else if (error?.message) {
+      errors.value.push(error.message)
+    } else {
+      errors.value.push('Ошибка при входе в систему')
+    }
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Обработка входа
+const handleLogin = () => {
+  errors.value = []
+
+  // Валидация всех полей
+  if (!validateAll()) {
+    errors.value.push('Пожалуйста, исправьте ошибки в форме')
+    return
+  }
+
+  isLoading.value = true
+  performLogin()
 }
 </script>
