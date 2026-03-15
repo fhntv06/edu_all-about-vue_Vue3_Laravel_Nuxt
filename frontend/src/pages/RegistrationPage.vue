@@ -20,39 +20,41 @@
       <form class="mt-8 space-y-4" @submit.prevent="handleRegistration">
         <!-- Имя -->
         <div>
-          <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+          <label for="firstname" class="block text-sm font-medium text-gray-700 mb-1">
             Имя *
           </label>
           <input
-            id="name"
-            v-model="form.name"
-            name="name"
+            id="firstname"
+            v-model="form.firstname"
+            name="firstname"
             type="text"
             class="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors"
             placeholder="Введите ваше имя"
-            :class="{ 'border-red-300': validation.name.valid === false }"
+            :class="{ 'border-red-300': !validation.firstname.valid }"
+            @blur="validateField('firstname')"
           >
-          <p v-if="validation.name.valid === false" class="mt-1 text-sm text-red-600">
-            {{ validation.name.message }}
+          <p v-if="!validation.firstname.valid" class="mt-1 text-sm text-red-600">
+            {{ validation.firstname.message }}
           </p>
         </div>
 
         <!-- Логин -->
         <div>
-          <label for="username" class="block text-sm font-medium text-gray-700 mb-1">
+          <label for="login" class="block text-sm font-medium text-gray-700 mb-1">
             Логин *
           </label>
           <input
-            id="username"
-            v-model="form.username"
-            name="username"
+            id="login"
+            v-model="form.login"
+            name="login"
             type="text"
             class="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors"
             placeholder="Придумайте логин"
-            :class="{ 'border-red-300': validation.username.valid === false }"
+            :class="{ 'border-red-300': !validation.login.valid }"
+            @blur="validateField('login')"
           >
-          <p v-if="validation.username.valid === false" class="mt-1 text-sm text-red-600">
-            {{ validation.username.message }}
+          <p v-if="!validation.login.valid" class="mt-1 text-sm text-red-600">
+            {{ validation.login.message }}
           </p>
         </div>
 
@@ -68,9 +70,10 @@
             type="email"
             class="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors"
             placeholder="example@mail.com"
-            :class="{ 'border-red-300': validation.email.valid === false }"
+            :class="{ 'border-red-300': !validation.email.valid }"
+            @blur="validateField('email')"
           >
-          <p v-if="validation.email.valid === false" class="mt-1 text-sm text-red-600">
+          <p v-if="!validation.email.valid" class="mt-1 text-sm text-red-600">
             {{ validation.email.message }}
           </p>
         </div>
@@ -86,10 +89,11 @@
             name="phone"
             type="tel"
             class="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors"
-            placeholder="+7 (999) 999-99-99"
-            :class="{ 'border-red-300': validation.phone.valid === false }"
+            placeholder="+79999999999"
+            :class="{ 'border-red-300': !validation.phone.valid }"
+            @blur="validateField('phone')"
           >
-          <p v-if="validation.phone.valid === false" class="mt-1 text-sm text-red-600">
+          <p v-if="!validation.phone.valid" class="mt-1 text-sm text-red-600">
             {{ validation.phone.message }}
           </p>
         </div>
@@ -106,9 +110,10 @@
             type="password"
             class="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors"
             placeholder="Минимум 6 символов"
-            :class="{ 'border-red-300': validation.password.valid === false }"
+            :class="{ 'border-red-300': !validation.password.valid }"
+            @blur="validateField('password')"
           >
-          <p v-if="validation.password.valid === false" class="mt-1 text-sm text-red-600">
+          <p v-if="!validation.password.valid" class="mt-1 text-sm text-red-600">
             {{ validation.password.message }}
           </p>
         </div>
@@ -125,9 +130,10 @@
             type="password"
             class="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors"
             placeholder="Повторите пароль"
-            :class="{ 'border-red-300': validation.confirmPassword.valid === false }"
+            :class="{ 'border-red-300': !validation.confirmPassword.valid }"
+            @blur="validateField('confirmPassword')"
           >
-          <p v-if="validation.confirmPassword.valid === false" class="mt-1 text-sm text-red-600">
+          <p v-if="!validation.confirmPassword.valid" class="mt-1 text-sm text-red-600">
             {{ validation.confirmPassword.message }}
           </p>
         </div>
@@ -141,7 +147,8 @@
               name="privacy"
               type="checkbox"
               class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded mt-1"
-              :class="{ 'border-red-300': validation.privacyAccepted.valid === false }"
+              :class="{ 'border-red-300': !validation.privacyAccepted.valid }"
+              @blur="validateField('privacyAccepted')"
             >
           </div>
           <div class="ml-3 text-sm">
@@ -150,7 +157,7 @@
               <a href="#" class="text-blue-600 hover:text-blue-500 transition-colors">правилами обработки персональных данных</a>
               *
             </label>
-            <p v-if="validation.privacyAccepted.valid === false" class="mt-1 text-red-600">
+            <p v-if="!validation.privacyAccepted.valid" class="mt-1 text-red-600">
               {{ validation.privacyAccepted.message }}
             </p>
           </div>
@@ -189,7 +196,7 @@
             </div>
             <div class="ml-3">
               <h3 class="text-sm font-medium text-green-800">
-                Регистрация успешна!
+                Регистрация прошла успешно!
               </h3>
               <div class="mt-2 text-sm text-green-700">
                 <p>Аккаунт успешно создан. Вы будете перенаправлены в панель управления.</p>
@@ -199,7 +206,7 @@
         </div>
 
         <!-- Сообщения об ошибках -->
-        <div v-if="error && !isSuccess" class="rounded-md bg-red-50 p-4">
+        <div v-if="errors.length && !isSuccess" class="rounded-md bg-red-50 p-4">
           <div class="flex">
             <div class="flex-shrink-0">
               <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
@@ -210,7 +217,7 @@
               <h3 class="text-sm font-medium text-red-800">
                 Ошибка регистрации
               </h3>
-              <div class="mt-2 text-sm text-red-700">
+              <div class="mt-2 text-sm text-red-700" v-for="error in errors">
                 <p>{{ error }}</p>
               </div>
             </div>
@@ -231,243 +238,125 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'RegistrationPage',
-  data() {
-    return {
-      form: {
-        name: '',
-        username: '',
-        email: '',
-        phone: '',
-        password: '',
-        confirmPassword: '',
-        privacyAccepted: false
-      },
-      isLoading: false,
-      isSuccess: false,
-      error: '',
-      validation: {
-        name: {valid: true, message: ''},
-        username: {valid: true, message: ''},
-        email: {valid: true, message: ''},
-        phone: {valid: true, message: ''},
-        password: {valid: true, message: ''},
-        confirmPassword: {valid: true, message: ''},
-        privacyAccepted: {valid: true, message: ''}
-      }
-    }
-  },
-  computed: {
-    isAuthenticated() {
-      return this.$store.getters.isAuthenticated
-    }
-  },
-  mounted() {
-    // Если пользователь уже авторизован, перенаправляем на главную
-    if (this.isAuthenticated) {
-      this.$router.push('/dashboard')
-    }
-  },
-  methods: {
-    validateName() {
-      const value = this.form.name.trim()
+<script setup>
+import { ref, computed, onBeforeMount, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { useStore } from 'vuex'
+import { fetchRegister } from '@/api/index.js'
+import { useFormValidation } from '@/composables'
 
-      if (!value) {
-        this.validation.name = {valid: false, message: 'Имя обязательно для заполнения'}
-        return false
-      }
+const router = useRouter()
+const store = useStore()
 
-      if (value.length <= 3) {
-        this.validation.name = {valid: false, message: 'Имя должно содержать более 3-х символов'}
-        return false
-      }
+const isLoading = ref(false)
+const isSuccess = ref(false)
+const errors = ref([])
 
-      this.validation.name = {valid: true, message: ''}
-      return true
-    },
+// Форма
+const form = reactive({
+  firstname: '',
+  login: '',
+  email: '',
+  phone: '',
+  password: '',
+  confirmPassword: '',
+  privacyAccepted: false
+})
 
-    validateUsername() {
-      const value = this.form.username.trim()
+const confirmPasswordRule = (value, formData, fieldName = 'Подтверждение пароля') => {
+  if (!value) {
+    return { valid: false, message: `${fieldName} обязательно` }
+  }
+  if (value !== formData.password) {
+    return { valid: false, message: 'Пароли не совпадают' }
+  }
+  return null
+}
 
-      if (!value) {
-        this.validation.username = {valid: false, message: 'Логин обязателен для заполнения'}
-        return false
-      }
-      if (value.length <= 3) {
-        this.validation.username = {valid: false, message: 'Логин должно содержать более 3-х символов'}
-        return false
-      }
+// Правила валидации
+const validationRules = {
+  firstname: ['required', 'name'],
+  login: ['required', 'login'],
+  email: ['required', 'email'],
+  phone: ['phone'], // необязательное поле
+  password: ['required', 'password'],
+  confirmPassword: [confirmPasswordRule],
+  privacyAccepted: ['required']
+}
 
-      const usernameRegex = /^[a-zA-Z0-9_]+$/
-      if (!usernameRegex.test(value)) {
-        this.validation.username = {
-          valid: false,
-          message: 'Логин может содержать только буквы, цифры и нижнее подчеркивание'
+// Метки полей для сообщений об ошибках
+const fieldLabels = {
+  firstname: 'Имя',
+  login: 'Логин',
+  email: 'Email',
+  phone: 'Телефон',
+  password: 'Пароль',
+  confirmPassword: 'Подтверждение пароля',
+  privacyAccepted: 'Согласие на обработку данных'
+}
+
+// Используем хук валидации
+const { validation, validateField, validateAll, resetValidation } = useFormValidation(form, validationRules, fieldLabels)
+
+// Вычисляемое свойство для проверки авторизации
+const isAuthenticated = computed(() => store.getters.isAuthenticated)
+
+// Перенаправление, если пользователь уже авторизован
+onBeforeMount(() => {
+  if (isAuthenticated.value) {
+    router.push('/dashboard')
+  }
+})
+
+// Сохранение данных пользователя
+const saveDataUser = ({ user, token }) => {
+  if (!user) errors.value.push('Не получены данные пользователя!')
+  if (!token) errors.value.push('Не получен токен авторизации!')
+
+  isSuccess.value = !!(user && token)
+
+  if (!isSuccess.value) return
+
+  store.dispatch('login', { user, token })
+  localStorage.setItem('user-data', JSON.stringify(user))
+
+  setTimeout(() => router.push('/dashboard'), 2000)
+}
+
+// Обработка регистрации
+const handleRegistration = async () => {
+  errors.value = []
+
+  // Валидация всех полей
+  if (!validateAll()) {
+    return
+  }
+
+  isLoading.value = true
+
+  try {
+    const { data } = await fetchRegister(form)
+    saveDataUser(data)
+  } catch (error) {
+    const responseData = error?.response?.data
+
+    if (responseData?.errors) {
+      Object.entries(responseData.errors).forEach(([nameField, errorMessages]) => {
+        // Обновляем состояние валидации для поля с ошибкой
+        if (validation[nameField]) {
+          validation[nameField].valid = false
+          validation[nameField].message = errorMessages[0]
         }
-        return false
-      }
 
-      this.validation.username = {valid: true, message: ''}
-      return true
-    },
-
-    validateEmail() {
-      const value = this.form.email.trim()
-
-      if (!value) {
-        this.validation.email = {valid: false, message: 'Email обязателен для заполнения'}
-        return false
-      }
-
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(value)) {
-        this.validation.email = {valid: false, message: 'Введите корректный email'}
-        return false
-      }
-
-      this.validation.email = {valid: true, message: ''}
-      return true
-    },
-
-    validatePhone() {
-      const value = this.form.phone.trim()
-
-      if (value) {
-        const phoneRegex = /^\+?[78][-\(]?\d{3}\)?-?\d{3}-?\d{2}-?\d{2}$/
-        if (!phoneRegex.test(value)) {
-          this.validation.phone = {valid: false, message: 'Введите корректный номер телефона'}
-          return false
-        }
-      }
-
-      this.validation.phone = {valid: true, message: ''}
-      return true
-    },
-
-    validatePassword() {
-      const value = this.form.password
-
-      if (!value) {
-        this.validation.password = {valid: false, message: 'Пароль обязателен для заполнения'}
-        return false
-      }
-
-      if (value.length < 6) {
-        this.validation.password = {
-          valid: false,
-          message: 'Пароль должен содержать минимум 6 символов'
-        }
-        return false
-      }
-
-      this.validation.password = {valid: true, message: ''}
-      return true
-    },
-
-    validateConfirmPassword() {
-      const value = this.form.confirmPassword
-
-      if (!value) {
-        this.validation.confirmPassword = {
-          valid: false,
-          message: 'Подтверждение пароля обязательно'
-        }
-        return false
-      }
-
-      if (value !== this.form.password) {
-        this.validation.confirmPassword = {valid: false, message: 'Пароли не совпадают'}
-        return false
-      }
-
-      this.validation.confirmPassword = {valid: true, message: ''}
-      return true
-    },
-
-    validatePrivacy() {
-      if (!this.form.privacyAccepted) {
-        this.validation.privacyAccepted = {
-          valid: false,
-          message: 'Необходимо согласие на обработку данных'
-        }
-        return false
-      }
-
-      this.validation.privacyAccepted = {valid: true, message: ''}
-      return true
-    },
-
-    async handleRegistration() {
-      this.error = ''
-      this.isSuccess = false
-
-      const isNameValid = this.validateName()
-      const isUsernameValid = this.validateUsername()
-      const isEmailValid = this.validateEmail()
-      const isPhoneValid = this.validatePhone()
-      const isPasswordValid = this.validatePassword()
-      const isConfirmPasswordValid = this.validateConfirmPassword()
-      const isPrivacyValid = this.validatePrivacy()
-
-      if (!isNameValid || !isUsernameValid || !isEmailValid || !isPhoneValid ||
-        !isPasswordValid || !isConfirmPasswordValid || !isPrivacyValid) {
-        return
-      }
-
-      this.isLoading = true
-
-      try {
-        const response = await this.mockRegistration()
-
-        // Автоматически логиним пользователя после регистрации
-        this.$store.dispatch('login', {
-          user: response.user,
-          token: response.token
-        })
-
-        localStorage.setItem('user-data', JSON.stringify(response.user))
-
-        this.isSuccess = true
-
-        // Автоматический переход через 2 секунды
-        setTimeout(() => {
-          this.$router.push('/dashboard')
-        }, 2000)
-      } catch (error) {
-        this.error = error.message
-      } finally {
-        this.isLoading = false
-      }
-    },
-    mockRegistration() {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          // Mock проверка существующих пользователей
-          const existingUsers = ['admin', 'user123']
-          const existingEmails = ['admin@example.com', 'user@test.ru']
-
-          if (existingUsers.includes(this.form.username)) {
-            reject(new Error('Пользователь с таким логином уже существует'))
-          }
-          if (existingEmails.includes(this.form.email)) {
-            reject(new Error('Пользователь с таким email уже существует'))
-          }
-
-          resolve({
-            user: {
-              id: Date.now(),
-              name: this.form.name,
-              username: this.form.username,
-              email: this.form.email,
-              phone: this.form.phone
-            },
-            token: 'mock-jwt-token-' + Date.now()
-          })
-        }, 2000)
+        errors.value.push(errorMessages[0])
       })
-    },
+    } else if (responseData?.message) {
+      errors.value.push(responseData.message)
+    } else {
+      errors.value.push('Произошла ошибка при регистрации')
+    }
+  } finally {
+    isLoading.value = false
   }
 }
 </script>
