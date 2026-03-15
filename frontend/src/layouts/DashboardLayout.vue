@@ -74,7 +74,7 @@
               class="ml-3 transition-all duration-200 overflow-hidden"
               :class="sidebarCollapsed ? 'opacity-0 w-0' : 'opacity-100 w-auto'"
             >
-              <p class="text-sm font-medium text-gray-700 truncate">{{ currentUser?.name }}</p>
+              <p class="text-sm font-medium text-gray-700 truncate">{{ currentUser.firstname }}</p>
               <button
                 @click="handleLogout"
                 class="text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
@@ -164,7 +164,7 @@
                   </span>
                 </div>
                 <div class="ml-3">
-                  <p class="text-sm font-medium text-gray-700">{{ currentUser?.name }}</p>
+                  <p class="text-sm font-medium text-gray-700">{{ currentUser.firstname }}</p>
                   <button
                     @click="handleLogout"
                     class="text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
@@ -197,118 +197,93 @@
 
       <!-- Контент -->
       <main class="flex-1 p-6 transition-all duration-300 ease-in-out">
-        <!-- Breadcrumbs -->
-        <div class="mb-6">
-          <Breadcrumbs />
-        </div>
-
         <router-view />
       </main>
     </div>
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, computed } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter, useRoute } from 'vue-router'
-import { FallbackIcon } from '@/components/UI/icons.js'
 
-export default {
-  name: 'Dashboard',
-  setup() {
-    const store = useStore()
-    const router = useRouter()
-    const route = useRoute() // Добавляем useRoute
-    const mobileMenuOpen = ref(false)
-    const sidebarCollapsed = ref(false)
+const store = useStore()
+const router = useRouter()
+const route = useRoute()
 
-    const navigation = computed(() => {
-      const routes = router.options.routes
-      const dashboardRoute = routes.find(route => route.path === '/dashboard')
+// Состояния
+const mobileMenuOpen = ref(false)
+const sidebarCollapsed = ref(false)
 
-      if (!dashboardRoute || !dashboardRoute.children) {
-        return []
+// Навигация
+const navigation = computed(() => {
+  const routes = router.options.routes
+  const dashboardRoute = routes.find(route => route.path === '/dashboard')
+
+  if (!dashboardRoute?.children) {
+    return []
+  }
+
+  const navItems = []
+
+  const processRoute = (child, basePath = '/dashboard') => {
+    const fullPath = basePath + (child.path ? `/${child.path}` : '')
+
+    // Если это layout с детьми, берем первого ребенка с breadcrumb
+    if (child.children?.length > 0) {
+      const firstChildWithBreadcrumb = child.children.find(
+        subChild => subChild.meta?.breadcrumb && subChild.name
+      )
+      if (firstChildWithBreadcrumb) {
+        const childFullPath = fullPath + (firstChildWithBreadcrumb.path ? `/${firstChildWithBreadcrumb.path}` : '')
+        navItems.push({
+          name: firstChildWithBreadcrumb.meta.breadcrumb,
+          to: childFullPath,
+          icon: child.meta?.icon,
+          routeName: firstChildWithBreadcrumb.name,
+          basePath: fullPath
+        })
       }
-
-      const navItems = []
-
-      const processRoute = (child, basePath = '/dashboard') => {
-        const fullPath = basePath + (child.path ? `/${child.path}` : '')
-
-        // Если это layout с детьми, берем первого ребенка для навигации
-        if (child.children && child.children.length > 0) {
-          const firstChildWithBreadcrumb = child.children.find(
-            subChild => subChild.meta?.breadcrumb && subChild.name
-          )
-          if (firstChildWithBreadcrumb) {
-            const childFullPath = fullPath + (firstChildWithBreadcrumb.path ? `/${firstChildWithBreadcrumb.path}` : '')
-
-            navItems.push({
-              name: firstChildWithBreadcrumb.meta.breadcrumb,
-              to: childFullPath,
-              icon: child.meta?.icon,
-              routeName: firstChildWithBreadcrumb.name,
-              basePath: fullPath // Сохраняем базовый путь для проверки активности
-            })
-          }
-        }
-        // Если это конечная страница с breadcrumb
-        else if (child.meta?.breadcrumb && child.name) {
-          navItems.push({
-            name: child.meta.breadcrumb,
-            to: fullPath,
-            icon: child.meta?.icon,
-            routeName: child.name,
-            basePath: fullPath
-          })
-        }
-      }
-
-      dashboardRoute.children.forEach(child => processRoute(child))
-
-      return navItems
-    })
-
-    // Функция для проверки активного пункта меню
-    const isActiveLink = (item) => (route.path === item.basePath)
-
-    const currentUser = computed(() => store.getters.currentUser)
-
-    const userInitials = computed(() => {
-      if (!currentUser.value?.name) return 'U'
-      return currentUser.value.name
-        .split(' ')
-        .map(word => word[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2)
-    })
-
-    const sidebarWidth = computed(() => {
-      return sidebarCollapsed.value ? 'w-20' : 'w-64'
-    })
-
-    const toggleSidebar = () => {
-      sidebarCollapsed.value = !sidebarCollapsed.value
     }
-
-    const handleLogout = () => {
-      store.dispatch('logout')
-      router.push('/login')
-    }
-
-    return {
-      mobileMenuOpen,
-      sidebarCollapsed,
-      navigation,
-      currentUser,
-      userInitials,
-      sidebarWidth,
-      toggleSidebar,
-      handleLogout,
-      isActiveLink,
+    // Если это конечная страница с breadcrumb
+    else if (child.meta?.breadcrumb && child.name) {
+      navItems.push({
+        name: child.meta.breadcrumb,
+        to: fullPath,
+        icon: child.meta?.icon,
+        routeName: child.name,
+        basePath: fullPath
+      })
     }
   }
+
+  dashboardRoute.children.forEach(child => processRoute(child))
+  return navItems
+})
+
+// Проверка активного пункта меню
+const isActiveLink = (item) => route.path === item.basePath
+
+// Пользователь
+const currentUser = computed(() => store.getters.currentUser)
+
+const userInitials = computed(() => {
+  return currentUser.value?.firstname[0].toUpperCase() || 'U'
+})
+
+// Ширина сайдбара
+const sidebarWidth = computed(() => {
+  return sidebarCollapsed.value ? 'w-20' : 'w-64'
+})
+
+// Методы
+const toggleSidebar = () => {
+  sidebarCollapsed.value = !sidebarCollapsed.value
+}
+
+const handleLogout = () => {
+  store.dispatch('logout')
+  router.push('/login')
 }
 </script>
