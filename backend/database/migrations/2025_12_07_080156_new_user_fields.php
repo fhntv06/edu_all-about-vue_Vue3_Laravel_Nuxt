@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('firstname');
-            $table->string('lastname');
-            $table->string('company');
-            $table->string('position');
+            $table->string('lastname')->nullable();
+            $table->string('company')->nullable();
+            $table->string('position')->nullable();
         });
     }
 
