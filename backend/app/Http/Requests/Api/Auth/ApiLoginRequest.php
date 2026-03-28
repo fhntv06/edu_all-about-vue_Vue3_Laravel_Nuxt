@@ -16,7 +16,7 @@ class ApiLoginRequest extends FormRequest
         return [
             'email' => 'required|string|regex:/^[^\s@]+@[^\s@]+\.[^\s@]+$/|max:255',
             'password' => 'required|string|min:8|max:255',
-            'rememberMe' => 'bool'
+            'remember_me' => 'bool'
         ];
     }
     /**
@@ -39,7 +39,7 @@ class ApiLoginRequest extends FormRequest
                 'min' => 'Поле ":attribute" должно содержать минимум :min символов!',
                 'max' => 'Поле ":attribute" не должно превышать :max символов!',
             ],
-            'rememberMe' => [
+            'remember_me' => [
                 'bool' => 'Поле ":attribute" имеет значение с неверным типом данных!'
             ],
         ];
@@ -54,7 +54,7 @@ class ApiLoginRequest extends FormRequest
         return [
             'email' => 'Email',
             'password' => 'Пароль',
-            'rememberMe' => 'Запомнить меня',
+            'remember_me' => 'Запомнить меня',
         ];
     }
 }
