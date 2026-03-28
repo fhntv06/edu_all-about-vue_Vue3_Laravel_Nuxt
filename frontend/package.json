@@ -15,6 +15,7 @@
     "server": "json-server --watch db.json --port 8888"
   },
   "dependencies": {
+    "@laravel/echo-vue": "^2.3.1",
     "@tailwindcss/vite": "^4.1.16",
     "axios": "^1.13.6",
     "json-server": "^1.0.0-beta.3",
@@ -30,7 +31,9 @@
     "eslint": "^9.37.0",
     "eslint-plugin-vue": "~10.5.0",
     "globals": "^16.4.0",
+    "laravel-echo": "^2.3.1",
     "prettier": "3.6.2",
+    "pusher-js": "^8.4.3",
     "tailwindcss": "^4.1.16",
     "vite": "^7.1.11",
     "vite-plugin-vue-devtools": "^8.0.3"

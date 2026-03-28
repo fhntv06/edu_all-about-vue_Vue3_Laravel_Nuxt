@@ -407,28 +407,113 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onUnmounted, onBeforeMount } from 'vue'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 import UserTimeWidget from '@/components/Widgets/UserTimeWidget.vue'
 import WorldTimeWidget from '@/components/Widgets/WorldTimeWidget.vue'
 import WeatherWidget from '@/components/Widgets/WeatherWidget.vue'
+import { fetchLogout } from "@/api/index.js"
+import Echo from 'laravel-echo'
+import Pusher from 'pusher-js'
+import { broadcastingConfig } from "@/config"
 
-export default {
-  name: 'DashboardPage',
-  components: {
-    UserTimeWidget,
-    WorldTimeWidget,
-    WeatherWidget
-  },
-  methods: {
-    async handleLogout() {
-      this.$store.state.authStore.commit('LOGOUT')
-      this.$router.push('/')
-    }
-  },
-  computed: {
-    isAuthenticated() {
-      return this.$store.state.authStore.isAuthenticated
-    }
-  },
+const store = useStore()
+const router = useRouter()
+
+const isLoading = ref(false)
+const dataSocket = ref(null)
+let echoInstance = null
+let channel = null
+
+const user = computed(() => store.getters.currentUser)
+const isAuthenticated = computed(() => store.state.authStore.isAuthenticated)
+
+// Initialize Echo
+const initEcho = () => {
+  if (echoInstance) return echoInstance
+
+  window.Pusher = Pusher
+
+  echoInstance = new Echo(broadcastingConfig)
+
+  return echoInstance
 }
+
+// Subscribe to channel
+const subscribeToChannel = () => {
+  const echo = initEcho()
+
+  if (!echo) {
+    console.error('Echo не инициализирован')
+    return
+  }
+
+  // Подписываемся на канал
+  channel = echo.channel('App.Events.Post.all')
+
+  // Слушаем событие
+  // Ищет [namespace].PostGetted в Laravel / App.Events.Post.PostGetted
+
+  // А если через точку (.PostGetted), то не добавляет [namespace] и ищет PostGetted
+  channel.listen('.PostGetted', (e) => {
+    console.log('Получено событие PostGetted:', e)
+
+    // Парсим данные если нужно
+    let parsedData = e
+    if (e.data && typeof e.data === 'string') {
+      try {
+        parsedData = JSON.parse(e.data)
+        console.log('Распарсенные данные:', parsedData)
+        dataSocket.value = parsedData
+      } catch (error) {
+        console.error('Ошибка парсинга данных:', error)
+        dataSocket.value = e
+      }
+    } else {
+      dataSocket.value = e
+    }
+  })
+
+  // Отслеживаем успешную подписку
+  channel.subscribed(() => {
+    console.log('✅ Успешно подписан на канал App.Models.Post.all')
+  })
+
+  // Отслеживаем ошибки
+  channel.error((error) => {
+    console.error('❌ Ошибка канала:', error)
+  })
+}
+
+// Methods
+const handleLogout = async () => {
+  isLoading.value = true
+
+  try {
+    await fetchLogout(user.value)
+    store.commit('LOGOUT')
+    router.push('/')
+  } catch (error) {
+    console.error(error?.response?.data.errors)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Lifecycle
+onBeforeMount(() => {
+  subscribeToChannel()
+})
+
+onUnmounted(() => {
+  // Отписываемся от канала при размонтировании
+  if (channel) {
+    channel.stopListening('PostGetted')
+    if (echoInstance) {
+      echoInstance.leaveChannel('App.Model.Post.all')
+    }
+  }
+})
 </script>
