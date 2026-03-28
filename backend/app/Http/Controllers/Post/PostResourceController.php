@@ -1,14 +1,30 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Post;
 
+use App\Events\Post\PostCreated;
+use App\Events\Post\PostDeleted;
+use App\Events\Post\PostGetted;
+use App\Events\Post\PostUpdated;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Post\UserStoreRequest;
+use App\Http\Requests\Post\UserUpdateRequest;
+use App\Jobs\ProcessPost;
 use App\Models\Post;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Events\Dispatcher as Event;
 
 class PostResourceController extends Controller
 {
+    private Event $event;
+
+    function __construct(Event $event)
+    {
+        $this->event = $event;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -16,19 +32,6 @@ class PostResourceController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        // Валидация query параметров
-        $validated = $request->validate([
-            'page' => 'integer|min:1',
-            'per_page' => 'integer|min:1|max:100',
-            'search' => 'string|max:255',
-            'author' => 'string|max:255',
-            'status' => 'in:draft,published,archived',
-            'sort' => 'in:title,date,created_at,updated_at,view_count',
-            'order' => 'in:asc,desc',
-            'start_date' => 'date',
-            'end_date' => 'date|after_or_equal:start_date',
-        ]);
-
         // Базовый запрос
         $collection = Post::query();
 
@@ -69,6 +72,10 @@ class PostResourceController extends Controller
         $perPage = $request->input('per_page', 15);
         $posts = $collection->paginate($perPage);
 
+        ProcessPost::dispatch($posts->all());
+        event(new PostGetted($posts->all()));
+//        $this->event->dispatch(new PostGetted($posts->all()));
+
         // Возвращаем коллекцию с мета-данными
         return response()->json([
             'data' => $collection->get(),
@@ -94,27 +101,20 @@ class PostResourceController extends Controller
      *
      * POST /api/posts
      */
-    public function store(StorePostRequest $request): JsonResponse
+    public function store(UserStoreRequest $request): JsonResponse
     {
+        $data = $request->validated();
+
         try {
-            // Авторизация (если используете политики)
-            // Gate::authorize('create', Post::class);
-
             // Создание поста с автоматическим заполнением полей
-            $post = Post::create([
-                'title' => $request->validated('title'),
-                'author' => $request->validated('author'),
-                'content' => $request->validated('content'),
-                'date' => $request->validated('date', now()),
-                // Поля created_at и updated_at заполнятся автоматически
-            ]);
+            $post = Post::create($data);
 
-            // Дополнительные действия при создании
-            // event(new PostCreated($post));
+            event(new PostCreated($post));
+//            $this->event->dispatch(new PostCreated($post));
 
             return response()->json([
                 'message' => 'Post created successfully',
-                'data' => new PostResource($post),
+                'post' => $post,
             ], Response::HTTP_CREATED);
 
         } catch (\Exception $e) {
@@ -138,9 +138,6 @@ class PostResourceController extends Controller
     public function show(Post $post): JsonResponse
     {
         try {
-            // Авторизация (если нужно)
-            // Gate::authorize('view', $post);
-
             // Увеличиваем счетчик просмотров
             $post->increment('view_count');
 
@@ -148,7 +145,7 @@ class PostResourceController extends Controller
             // $post->load(['comments', 'author', 'tags']);
 
             return response()->json([
-                'data' => new PostResource($post),
+                'post' => $post,
             ]);
 
         } catch (\Exception $e) {
@@ -164,54 +161,22 @@ class PostResourceController extends Controller
      *
      * PUT/PATCH /api/posts/{post}
      */
-    public function update(UpdatePostRequest $request, Post $post): JsonResponse
+    public function update(UserUpdateRequest $request, Post $post): JsonResponse
     {
+        $data = $request->validated();
+
         try {
-            // Авторизация
-            // Gate::authorize('update', $post);
-
-            // Проверка, можно ли обновлять опубликованный пост
-            // if ($post->isPublished() && !$request->user()->isAdmin()) {
-            //     return response()->json([
-            //         'message' => 'Cannot update published post',
-            //     ], Response::HTTP_FORBIDDEN);
-            // }
-
-            // Обновление полей
-            $updateData = [];
-
-            if ($request->has('title')) {
-                $updateData['title'] = $request->validated('title');
-            }
-
-            if ($request->has('author')) {
-                $updateData['author'] = $request->validated('author');
-            }
-
-            if ($request->has('content')) {
-                $updateData['content'] = $request->validated('content');
-            }
-
-            if ($request->has('date')) {
-                $updateData['date'] = $request->validated('date');
-            }
-
-            if ($request->has('status')) {
-                $updateData['status'] = $request->validated('status');
-            }
-
             // Обновление поста
-            $post->update($updateData);
-
-            // Дополнительные действия после обновления
-            // event(new PostUpdated($post));
+            $post->update($data);
 
             // Загружаем свежие данные
             $post->refresh();
 
+            $this->event->dispatch(new PostUpdated($post));
+
             return response()->json([
                 'message' => 'Post updated successfully',
-                'data' => new PostResource($post),
+                'post' => $post,
             ]);
 
         } catch (\Exception $e) {
@@ -236,29 +201,15 @@ class PostResourceController extends Controller
     public function destroy(Post $post): JsonResponse
     {
         try {
-            // Авторизация
-            // Gate::authorize('delete', $post);
-
-            // Проверка на удаление опубликованного поста
-            // if ($post->isPublished() && !$request->user()->isAdmin()) {
-            //     return response()->json([
-            //         'message' => 'Cannot delete published post',
-            //     ], Response::HTTP_FORBIDDEN);
-            // }
-
-            // Сохраняем ID для логов
-            $postId = $post->id;
-            $postTitle = $post->title;
-
             // Удаление поста
             $post->delete();
 
             // Дополнительные действия после удаления
-            // event(new PostDeleted($postId));
+             $this->event->dispatch(new PostDeleted($post));
 
             \Log::info('Post deleted', [
-                'post_id' => $postId,
-                'post_title' => $postTitle,
+                'post_id' => $post->id,
+                'post_title' => $post->title,
                 'deleted_by' => auth()->id(),
                 'deleted_at' => now(),
             ]);

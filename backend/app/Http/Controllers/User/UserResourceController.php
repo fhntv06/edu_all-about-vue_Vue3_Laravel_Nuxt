@@ -1,13 +1,30 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\User;
 
+use App\Events\User\UserCreated;
+use App\Events\User\UserDeleted;
+use App\Events\User\UserShow;
+use App\Events\User\UserUpdated;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Post\UserStoreRequest;
+use App\Http\Requests\Post\UserUpdateRequest;
+use App\Jobs\ProcessPost;
+use App\Jobs\ProcessUser;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 
 class UserResourceController extends Controller
 {
+    private Event $event;
+
+    function __construct(Event $event)
+    {
+        $this->event = $event;
+    }
     /**
      * Display a listing of the resource.
      * GET /api/users
@@ -47,6 +64,8 @@ class UserResourceController extends Controller
 
             $users = $collection->paginate($perPage);
 
+            ProcessUser::dispatch($users->all());
+
             // Возвращаем коллекцию с пагинацией
             return response()->json([
                 'success' => true,
@@ -78,7 +97,7 @@ class UserResourceController extends Controller
      * Store a newly created resource in storage.
      * POST /api/users
      */
-    public function store(StoreUserRequest $request): JsonResponse
+    public function store(UserStoreRequest $request): JsonResponse
     {
         try {
             $user = User::create([
@@ -90,11 +109,12 @@ class UserResourceController extends Controller
 
             // Генерация API токена (если используется Sanctum/Passport)
             $token = $user->createToken('api-token')->plainTextToken;
+            $this->event->dispatch(new UserCreated($user));
 
             return response()->json([
                 'success' => true,
                 'message' => 'Пользователь успешно создан',
-                'data' => new UserResource($user),
+                'data' => $user,
                 'token' => $token, // Опционально, если нужен сразу токен
             ], 201);
 
@@ -115,11 +135,13 @@ class UserResourceController extends Controller
     {
         try {
             // Загрузка связанных данных
-            $user->load(['posts', 'comments', 'profile']); // Пример
+            $user->load(['posts']);
+
+            event(new UserShow($user));
 
             return response()->json([
                 'success' => true,
-                'data' => new UserResource($user),
+                'data' => $user,
             ]);
 
         } catch (\Exception $e) {
@@ -135,17 +157,9 @@ class UserResourceController extends Controller
      * Update the specified resource in storage.
      * PUT/PATCH /api/users/{id}
      */
-    public function update(UpdateUserRequest $request, User $user): JsonResponse
+    public function update(UserUpdateRequest $request, User $user): JsonResponse
     {
         try {
-            // Проверка прав (можно добавить в Request или Policy)
-            if (auth()->id() !== $user->id && auth()->user()->role !== 'admin') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Недостаточно прав для обновления',
-                ], 403);
-            }
-
             $data = $request->validated();
 
             // Хешируем пароль если он был передан
@@ -155,15 +169,14 @@ class UserResourceController extends Controller
 
             $user->update($data);
 
-            // Обновляем связанные данные если нужно
-            // if ($request->has('permissions')) {
-            //     $user->permissions()->sync($request->input('permissions'));
-            // }
+            $user->fresh();
+
+            $this->event->dispatch(new UserUpdated($user));
 
             return response()->json([
                 'success' => true,
                 'message' => 'Пользователь обновлен',
-                'data' => new UserResource($user->fresh()),
+                'data' => $user,
             ]);
 
         } catch (\Exception $e) {
@@ -199,6 +212,8 @@ class UserResourceController extends Controller
             }
 
             $user->delete();
+
+            $this->event->dispatch(new UserDeleted($user));
 
             return response()->json([
                 'success' => true,
@@ -276,31 +291,6 @@ class UserResourceController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Ошибка при восстановлении',
-                'error' => config('app.debug') ? $e->getMessage() : null
-            ], 500);
-        }
-    }
-
-    /**
-     * Force delete user
-     * DELETE /api/users/{id}/force
-     */
-    public function forceDestroy($id): JsonResponse
-    {
-        try {
-            $user = User::withTrashed()->findOrFail($id);
-
-            $user->forceDelete();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Пользователь полностью удален',
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Ошибка при удалении',
                 'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
