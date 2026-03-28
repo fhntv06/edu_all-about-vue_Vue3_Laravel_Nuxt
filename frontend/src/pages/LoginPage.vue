@@ -59,11 +59,11 @@
           <div class="flex items-center">
             <input
               id="remember-me"
-              v-model="form.rememberMe"
+              v-model="form.remember_me"
               name="remember-me"
               type="checkbox"
               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              @change="validateField('rememberMe')"
+              @change="validateField('remember_me')"
             >
             <label for="remember-me" class="ml-2 block text-sm text-gray-900">
               Запомнить меня
@@ -139,6 +139,7 @@ import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { fetchLogin } from '@/api'
 import { useFormValidation } from '@/composables'
+import {fetchAuthSanctum} from "@/api/auth.js";
 
 const router = useRouter()
 const store = useStore()
@@ -149,21 +150,21 @@ const errors = ref([])
 const form = reactive({
   email: '',
   password: '',
-  rememberMe: false
+  remember_me: false
 })
 
 // Правила валидации
 const validationRules = {
   email: ['required', 'email'],
   password: ['required', 'password'],
-  rememberMe: ['bool']
+  remember_me: ['bool']
 }
 
 // Метки полей для сообщений об ошибках
 const fieldLabels = {
   email: 'Email',
   password: 'Пароль'
-  // rememberMe не нуждается в метке, так как не валидируется
+  // remember_me не нуждается в метке, так как не валидируется
 }
 
 // Используем хук валидации
@@ -197,9 +198,8 @@ const saveDataUser = (response) => {
 // Выполнение запроса на авторизацию
 const performLogin = async () => {
   try {
-    console.log(form)
+    await fetchAuthSanctum()
     const response = await fetchLogin(form)
-    console.log('Login response:', response)
 
     // Проверяем структуру ответа и вызываем saveDataUser
     // В зависимости от структуры ответа может быть response.data или просто response
