@@ -48,12 +48,12 @@
 <script>
   import { useTemplateRef } from 'vue'
   import { useRouter } from 'vue-router'
-  import { apiConfig } from '@/config'
+  import { config } from '@/api'
 
   export default {
     data() {
       return {
-        url: apiConfig.baseURL,
+        url: config.baseURL,
         post: {
           title: '',
           content: '',

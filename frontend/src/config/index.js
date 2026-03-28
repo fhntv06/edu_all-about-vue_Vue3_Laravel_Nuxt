@@ -1,4 +1,4 @@
-import apiConfig from './api.js'
 import weatherConfig from './weather.js'
+import broadcastingConfig from './broadcasting'
 
-export { apiConfig, weatherConfig }
+export { weatherConfig, broadcastingConfig }

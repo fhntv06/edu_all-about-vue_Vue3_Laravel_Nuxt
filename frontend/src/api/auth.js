@@ -1,10 +1,9 @@
-import axios from "axios";
-import { apiConfig } from "@/config";
+import { http, config } from './config'
 
-const url = apiConfig.baseURL
-const fetchLogin = (data) => axios.post(`${url}/auth/login`, data)
-const fetchRegister = (data) => axios.post(`${url}/auth/register`, data)
-const fetchMe = (data) => axios.post(`${url}/auth/me`, data)
-const fetchLogout = (data) => axios.post(`${url}/auth/logout`, data)
+const fetchLogin = (data) => http.post('/auth/login', data)
+const fetchRegister = (data) => http.post('/auth/register', data)
+const fetchMe = (data) => http.get('/auth/me', data)
+const fetchLogout = (data) => http.post('/auth/logout', data)
+const fetchAuthSanctum = () => http.get('/sanctum/csrf-cookie', { baseURL: config.appUrl })
 
-export { fetchLogin, fetchRegister, fetchMe, fetchLogout }
+export { fetchLogin, fetchRegister, fetchMe, fetchLogout, fetchAuthSanctum }

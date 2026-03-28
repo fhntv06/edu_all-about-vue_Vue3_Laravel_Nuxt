@@ -5,11 +5,17 @@
 <script>
 import PostForm from "@/components/Posts/PostForm.vue";
 import {useRouter} from "vue-router";
-const router = useRouter()
 
 export default {
   name: "PostCreatePage" ,
   components: {PostForm},
+  setup() {
+    const router = useRouter()
+
+    return {
+      router
+    }
+  },
   methods: {
     handleCreatePost(post) {
       this.createPost(post)
@@ -32,7 +38,7 @@ export default {
         .then((response) => {
           if (response.ok) {
             console.warn(`Post with id="${id}" created!`)
-            router.push('/dashboard/posts')
+            this.router.push('/dashboard/posts')
           } else {
             throw new Error(`Error request by create post with id="${id}"`)
           }

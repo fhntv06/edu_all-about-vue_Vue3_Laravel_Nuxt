@@ -1,4 +1,4 @@
-const authStore = {
+export default {
   state: {
     user: null,
     token: localStorage.getItem('auth-token') || null,
@@ -52,5 +52,3 @@ const authStore = {
     authToken: state => state.token
   }
 }
-
-export default authStore
